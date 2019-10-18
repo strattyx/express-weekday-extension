@@ -25,22 +25,22 @@ app.post("/invoke/timeline", (req, res) => {
 	let ret = {};
 
 	// day of week at start of period
-	ret["start"] = start.format("dddd");
+	ret["start"] = { value: start.format("dddd") };
 
 	// go to start of next day
 	let d = start.clone().startOf("day").add(1, "days");
 
 	while (!d.isAfter(end)) {
-		ret[d.format()] = d.format("dddd");
+		ret[d.format()] = { value: d.format("dddd") };
 		d = d.add(1, "days");
 	}
 
 	res.json({
 		timeline: ret,
 		warn: [], // nothing bad happened
-		resolutions: [] // nothings for user to click on
+		resolutions: [] // no machine-led decisions made
 	});
 });
 
 app.listen(5051, () => 
-    console.log("Extension Started successfully"))
+    console.log("Extension Server Started successfully"))
