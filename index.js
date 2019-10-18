@@ -1,31 +1,17 @@
+const moment = require("moment-timezone");
 const express = require("express");
 const bodyParser = require("body-parser");
-
 
 const app = express();
 app.use(bodyParser.json());
 
-// localize date to timezone
-function localize(d, tz) {
-	// this is ugly solution but works without having to use another library
-	return new Date(
-		d.toLocaleString("en-US", { 
-			timeZone: tz } ));
-}
-
-// get name for day of week on given Date
-function weekday(d) {
-	const dayNames = [
-		"Monday", "Tuesday", "Wednesday", "Thursday", 
-		"Friday", "Saturday", "Sunday"
-	];
-	return dayNames[d.getDay()];
-}
 
 // normal operations
 app.post("/invoke/realtime", (req, res) => {
 	const tz = req.body.arguments.Timezone;
-	res.json(weekday(localize(new Date(), tz)));
+	res.json({
+		return: moment().tz(tz).format("dddd"),
+	});
 });
 
 // used for backtesting
@@ -33,28 +19,20 @@ app.post("/invoke/timeline", (req, res) => {
 	
 	// localize start and end of period
 	const tz = req.body.arguments.Timezone;
-	const [ start, end ] = req.body.period.map(d => localize(new Date(d), tz));
+	const [ start, end ] = req.body.period.map(d => moment(d).tz(tz));
 
 	// this will be our timeline
 	let ret = {};
 
 	// day of week at start of period
-	ret["start"] = weekday(start);
+	ret["start"] = start.format("dddd");
 
-	let ts = start;
+	// go to start of next day
+	let d = start.clone().startOf("day").add(1, "days");
 
-	// truncate to date, convert to epoch milliseconds
-	ts = ts.setUTCHours(0, 0, 0, 0);
-
-	// ms/day
-	const oneDay = 1000 * 60 * 60 * 24;
-	ts += oneDay;
-
-	// enter weekdays for each day in period
-	while (ts < end) {
-		const d = new Date(ts);
-		ret[d.toDateString()] = weekday(d);
-		ts += oneDay;
+	while (!d.isAfter(end)) {
+		ret[d.format()] = d.format("dddd");
+		d = d.add(1, "days");
 	}
 
 	res.json({
@@ -65,4 +43,4 @@ app.post("/invoke/timeline", (req, res) => {
 });
 
 app.listen(5051, () => 
-    console.log("Extension Server Started successfully"))
+    console.log("Extension Started successfully"))
