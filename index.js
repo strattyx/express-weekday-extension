@@ -5,14 +5,15 @@ const bodyParser = require("body-parser");
 const app = express();
 app.use(bodyParser.json());
 
-
+// localize date to timezone
 function localize(d, tz) {
 	// this is ugly solution but works without having to use another library
 	return new Date(
 		d.toLocaleString("en-US", { 
-			timeZone: "America/New_York"} ));
+			timeZone: tz } ));
 }
 
+// get name for day of week on given Date
 function weekday(d) {
 	const dayNames = [
 		"Monday", "Tuesday", "Wednesday", "Thursday", 
@@ -29,9 +30,9 @@ app.post("/invoke/realtime", (req, res) => {
 
 // used for backtesting
 app.post("/invoke/timeline", (req, res) => {
+	
+	// localize start and end of period
 	const tz = req.body.arguments.Timezone;
-
-	// localize dates for start and end of period
 	const [ start, end ] = req.body.period.map(d => localize(new Date(d), tz));
 
 	// this will be our timeline
@@ -52,10 +53,9 @@ app.post("/invoke/timeline", (req, res) => {
 	// enter weekdays for each day in period
 	while (ts < end) {
 		const d = new Date(ts);
-		ret[d] = weekday(d);
+		ret[d.toDateString()] = weekday(d);
 		ts += oneDay;
 	}
-
 
 	res.json({
 		timeline: ret,
