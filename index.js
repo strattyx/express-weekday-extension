@@ -22,19 +22,21 @@ app.post("/invoke/timeline", (req, res) => {
 	const [ start, end ] = req.body.period.map(d => moment(d).tz(tz));
 
 	// this will be our timeline
-	let ret = {};
-
-	// day of week at start of period
-	ret["start"] = { value: start.format("dddd") };
+	let ret = {
+		// day of week at start of period
+		[ start.format() ] : start.format("dddd")
+	};
 
 	// go to start of next day
-	let d = start.clone().startOf("day").add(1, "days");
+	let d = start.startOf("day").add(1, "days");
 
+	// add entry for each day in period
 	while (!d.isAfter(end)) {
 		ret[d.format()] = { value: d.format("dddd") };
 		d = d.add(1, "days");
 	}
-
+	
+	// send response to extension server
 	res.json({
 		timeline: ret,
 		warn: [], // nothing bad happened
