@@ -15,7 +15,7 @@ app.post("/invoke/realtime", (req, res) => {
 });
 
 // used for backtesting
-app.post("/invoke/timeline", (req, res) => {
+app.post("/invoke/historic", (req, res) => {
 	
 	// localize start and end of period
 	const tz = req.body.arguments.Timezone;
